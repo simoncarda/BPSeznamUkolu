@@ -1,0 +1,133 @@
+﻿@using BPSeznamUkolu.Models
+@using BPSeznamUkolu.Configuration
+@using BPSeznamUkolu.Services
+@inject IDatabaseService DatabaseService
+@implements IDisposable
+@page "/"
+
+<div class="container mt-4">
+    <h2 class="mb-4">Checklist</h2>
+
+    @* Zobrazení chybové hlášky, pokud nějaká existuje *@
+    @if (!string.IsNullOrEmpty(_errorMessage)) {
+        <div class="alert alert-danger shadow-sm">@_errorMessage</div>
+    }
+
+    @* Přidávací formulář *@
+    <div class="input-group mb-4 shadow-sm">
+        <input type="text" 
+            class="form-control w-25" 
+            maxlength="@ChecklistSettings.MaxItemNameLength" 
+            placeholder="Název položky" 
+            @bind="_newItemName" />
+        <input type="text" 
+            class="form-control w-50" 
+            maxlength="@ChecklistSettings.MaxDescriptionLength" 
+            placeholder="Popis položky" 
+            @bind="_newItemDescription" />
+        <button class="btn btn-primary px-4" 
+                @onclick="OnAddChecklistItem">
+            Přidat
+        </button>
+    </div>
+
+    @* Tabulka *@
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;" class="text-center">Stav</th>
+                    <th style="width: 30%;">Název</th>
+                    <th>Popis</th>
+                    <th style="width: 140px;" class="text-center">Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _checklistItems) {
+                    <tr>
+                        <td class="text-center">
+                            @* Řešení automatického uložení po kliknutí *@
+                            <input type="checkbox" class="form-check-input fs-5"
+                                   @bind="item.IsChecked"
+                                   @bind:after="() => OnUpdateChecklistItem(item)" />
+                        </td>
+                        <td>
+                            @* Třídy border-0 a bg-transparent udělají z inputu vizuálně obyčejný text *@
+                            <input type="text" class="form-control border-0 bg-transparent"
+                                   maxlength="@ChecklistSettings.MaxItemNameLength" 
+                                   @bind="item.Name"
+                                   @bind:after="() => OnUpdateChecklistItem(item)" />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control border-0 bg-transparent"
+                                   maxlength="@ChecklistSettings.MaxDescriptionLength" 
+                                   @bind="item.Description"
+                                   @bind:after="() => OnUpdateChecklistItem(item)" />
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-danger btn-sm ms-1" 
+                                    @onclick="() => OnDeleteChecklistItem(item)">
+                                ✖
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    private string _newItemName = string.Empty;
+    private string _newItemDescription = string.Empty;
+    private List<ChecklistItem> _checklistItems = new List<ChecklistItem>();
+
+    private string _errorMessage = string.Empty;
+
+    private async Task OnAddChecklistItem()
+    {
+        if (String.IsNullOrWhiteSpace(_newItemName))
+        {
+            _errorMessage = "Název položky nesmí být prázdný.";
+            return;
+        }
+
+        var newItem = new ChecklistItem {
+            Name = _newItemName,
+            Description = _newItemDescription
+        };
+
+        await DatabaseService.AddChecklistItemAsync(newItem);
+        _newItemName = string.Empty;
+        _newItemDescription = string.Empty;
+        _errorMessage = string.Empty;
+    }
+
+    private async Task OnDeleteChecklistItem(ChecklistItem item)
+    {
+        await DatabaseService.DeleteChecklistItemAsync(item);
+    }
+
+    private async Task OnUpdateChecklistItem(ChecklistItem item)
+    {
+        await DatabaseService.UpdateChecklistItemAsync(item);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _checklistItems = await DatabaseService.GetChecklistItemsAsync();
+        DatabaseService.OnDatabaseChanged += OnDatabaseChanged;
+    }
+
+    private async void OnDatabaseChanged()
+    {
+        _checklistItems = await DatabaseService.GetChecklistItemsAsync();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        DatabaseService.OnDatabaseChanged -= OnDatabaseChanged;
+    }
+}
