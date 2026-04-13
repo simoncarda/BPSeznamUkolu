@@ -1,4 +1,5 @@
-﻿using BPSeznamUkolu.Models;
+﻿using BPSeznamUkolu.Configuration;
+using BPSeznamUkolu.Models;
 using SQLite;
 
 namespace BPSeznamUkolu.Services
@@ -43,6 +44,11 @@ namespace BPSeznamUkolu.Services
 
         public async Task AddChecklistItemAsync(ChecklistItem item)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(item.Name, nameof(item));
+            if (item.Name.Length > ChecklistSettings.MaxItemNameLength)
+                throw new ArgumentException($"Název položky nesmí být delší než {ChecklistSettings.MaxItemNameLength} znaků.", nameof(item));
+            if (item.Description.Length > ChecklistSettings.MaxDescriptionLength)
+                throw new ArgumentException($"Popis položky nesmí být delší než {ChecklistSettings.MaxDescriptionLength} znaků.", nameof(item));
             await InitAsync();
             await _database!.InsertAsync(item);
             OnDatabaseChanged?.Invoke();
@@ -57,6 +63,11 @@ namespace BPSeznamUkolu.Services
 
         public async Task UpdateChecklistItemAsync(ChecklistItem item)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(item.Name, nameof(item));
+            if (item.Name.Length > ChecklistSettings.MaxItemNameLength)
+                throw new ArgumentException($"Název položky nesmí být delší než {ChecklistSettings.MaxItemNameLength} znaků.", nameof(item));
+            if (item.Description.Length > ChecklistSettings.MaxDescriptionLength)
+                throw new ArgumentException($"Popis položky nesmí být delší než {ChecklistSettings.MaxDescriptionLength} znaků.", nameof(item));
             await InitAsync();
             await _database!.UpdateAsync(item);
             OnDatabaseChanged?.Invoke();

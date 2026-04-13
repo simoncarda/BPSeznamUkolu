@@ -21,10 +21,15 @@ namespace BPSeznamUkolu.Components.Pages
         // Validuje vstupní data a poté deleguje úkol na službu pro práci s databází
         private async Task OnAddChecklistItem()
         {
-            if (!IsItemValid(_newItem)) {
+            if (!IsItemValid(_newItem))
+                return;
+            try {
+                await DatabaseService.AddChecklistItemAsync(_newItem);
+            }
+            catch (Exception ex) {
+                _errorMessage = $"Chyba při přidávání položky: {ex.Message}";
                 return;
             }
-            await DatabaseService.AddChecklistItemAsync(_newItem);
             _newItem.Name = string.Empty;
             _newItem.Description = string.Empty;
             _errorMessage = string.Empty;
@@ -39,10 +44,15 @@ namespace BPSeznamUkolu.Components.Pages
         // Metoda pro aktualizaci položky v checklistu, pouze deleguje úkol na službu pro práci s databází
         private async Task OnUpdateChecklistItem(ChecklistItem item)
         {
-            if (!IsItemValid(item)) {
+            if (!IsItemValid(item))
+                return;
+            try {
+                await DatabaseService.UpdateChecklistItemAsync(item);
+            }
+            catch (Exception ex) {
+                _errorMessage = $"Chyba při aktualizaci položky: {ex.Message}";
                 return;
             }
-            await DatabaseService.UpdateChecklistItemAsync(item);
         }
 
         // Při inicializaci komponenty načítáme data z databáze a

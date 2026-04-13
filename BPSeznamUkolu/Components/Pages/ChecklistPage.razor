@@ -10,7 +10,7 @@
                class="form-control w-25 @(IsItemValid(_newItem) ? "" : "is-invalid")"
                title="@(!IsItemValid(_newItem) ? $"{_errorMessage}" : "")"
                maxlength="@ChecklistSettings.MaxItemNameLength" 
-               placeholder="Název položky" 
+               placeholder="Název položky (povinné)" 
                @bind="_newItem.Name" />
         <input type="text" 
             class="form-control w-50" 
