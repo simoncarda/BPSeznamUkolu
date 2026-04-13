@@ -1,13 +1,16 @@
 ﻿using BPSeznamUkolu.Models;
 using BPSeznamUkolu.Services;
 using Microsoft.AspNetCore.Components;
+using BPSeznamUkolu.Configuration;
 
 namespace BPSeznamUkolu.Components.Pages
 {
     public partial class ChecklistPage : IDisposable
     {
-        private string _newItemName = string.Empty;
-        private string _newItemDescription = string.Empty;
+        private ChecklistItem _newItem = new ChecklistItem {
+            Name = string.Empty,
+            Description = string.Empty
+        };
         private List<ChecklistItem> _checklistItems = new List<ChecklistItem>();
         private string _errorMessage = string.Empty;
 
@@ -18,19 +21,12 @@ namespace BPSeznamUkolu.Components.Pages
         // Validuje vstupní data a poté deleguje úkol na službu pro práci s databází
         private async Task OnAddChecklistItem()
         {
-            if (String.IsNullOrWhiteSpace(_newItemName)) {
-                _errorMessage = "Název položky nesmí být prázdný.";
+            if (!IsItemValid(_newItem)) {
                 return;
             }
-
-            var newItem = new ChecklistItem {
-                Name = _newItemName,
-                Description = _newItemDescription
-            };
-
-            await DatabaseService.AddChecklistItemAsync(newItem);
-            _newItemName = string.Empty;
-            _newItemDescription = string.Empty;
+            await DatabaseService.AddChecklistItemAsync(_newItem);
+            _newItem.Name = string.Empty;
+            _newItem.Description = string.Empty;
             _errorMessage = string.Empty;
         }
 
@@ -43,6 +39,9 @@ namespace BPSeznamUkolu.Components.Pages
         // Metoda pro aktualizaci položky v checklistu, pouze deleguje úkol na službu pro práci s databází
         private async Task OnUpdateChecklistItem(ChecklistItem item)
         {
+            if (!IsItemValid(item)) {
+                return;
+            }
             await DatabaseService.UpdateChecklistItemAsync(item);
         }
 
@@ -59,6 +58,24 @@ namespace BPSeznamUkolu.Components.Pages
         {
             _checklistItems = await DatabaseService.GetChecklistItemsAsync();
             StateHasChanged();
+        }
+
+        private bool IsItemValid(ChecklistItem item)
+        {
+            if (string.IsNullOrWhiteSpace(item.Name)) {
+                _errorMessage = "Název položky nesmí být prázdný.";
+                return false;
+            }
+            if (item.Name.Length > ChecklistSettings.MaxItemNameLength) {
+                _errorMessage = $"Název položky nesmí být delší než {ChecklistSettings.MaxItemNameLength} znaků.";
+                return false;
+            }
+            if (item.Description.Length > ChecklistSettings.MaxDescriptionLength) {
+                _errorMessage = $"Popis položky nesmí být delší než {ChecklistSettings.MaxDescriptionLength} znaků.";
+                return false;
+            }
+            _errorMessage = string.Empty;
+            return true;
         }
 
         // Při zničení komponenty odhlašujeme stránku od události změny databáze

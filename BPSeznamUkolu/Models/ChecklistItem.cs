@@ -18,9 +18,6 @@ namespace BPSeznamUkolu.Models
         public string Name { 
             get { return _name; } 
             set {
-                ArgumentNullException.ThrowIfNull(value);
-                if(value.Length > ChecklistSettings.MaxItemNameLength)
-                    throw new ArgumentException($"ItemName cannot be longer than {ChecklistSettings.MaxItemNameLength} characters.");
                 _name = value; 
             } 
         }
@@ -29,8 +26,6 @@ namespace BPSeznamUkolu.Models
         public string Description { 
             get { return _description; } 
             set {
-                if(value.Length > ChecklistSettings.MaxDescriptionLength)
-                    throw new ArgumentException($"Description cannot be longer than {ChecklistSettings.MaxDescriptionLength} characters.");
                 _description = value; 
             } 
         }

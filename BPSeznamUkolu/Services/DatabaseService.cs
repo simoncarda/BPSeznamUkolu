@@ -44,7 +44,6 @@ namespace BPSeznamUkolu.Services
         public async Task AddChecklistItemAsync(ChecklistItem item)
         {
             await InitAsync();
-
             await _database!.InsertAsync(item);
             OnDatabaseChanged?.Invoke();
         }

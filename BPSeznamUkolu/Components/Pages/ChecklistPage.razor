@@ -4,23 +4,19 @@
 <div class="container mt-4">
     <h2 class="mb-4">Checklist</h2>
 
-    @* Zobrazení chybové hlášky, pokud nějaká existuje *@
-    @if (!string.IsNullOrEmpty(_errorMessage)) {
-        <div class="alert alert-danger shadow-sm">@_errorMessage</div>
-    }
-
     @* Přidávací formulář *@
     <div class="input-group mb-4 shadow-sm">
         <input type="text" 
-            class="form-control w-25" 
-            maxlength="@ChecklistSettings.MaxItemNameLength" 
-            placeholder="Název položky" 
-            @bind="_newItemName" />
+               class="form-control w-25 @(IsItemValid(_newItem) ? "" : "is-invalid")"
+               title="@(!IsItemValid(_newItem) ? $"{_errorMessage}" : "")"
+               maxlength="@ChecklistSettings.MaxItemNameLength" 
+               placeholder="Název položky" 
+               @bind="_newItem.Name" />
         <input type="text" 
             class="form-control w-50" 
             maxlength="@ChecklistSettings.MaxDescriptionLength" 
             placeholder="Popis položky" 
-            @bind="_newItemDescription" />
+            @bind="_newItem.Description" />
         <button class="btn btn-primary px-4" 
                 @onclick="OnAddChecklistItem">
             Přidat
@@ -50,7 +46,8 @@
                         <td>
                             @* Třídy border-0 a bg-transparent udělají z inputu vizuálně obyčejný text *@
                             <input type="text" 
-                                   class="form-control border-0 bg-transparent"
+                                   class="form-control border-0 bg-transparent @(IsItemValid(item) ? "" : "is-invalid")"
+                                   title="@(!IsItemValid(item) ? $"{_errorMessage}" : "")"
                                    maxlength="@ChecklistSettings.MaxItemNameLength" 
                                    @bind="item.Name"
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
