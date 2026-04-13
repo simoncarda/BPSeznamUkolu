@@ -67,7 +67,7 @@ namespace BPSeznamUkolu.Components.Pages
         private async void OnDatabaseChanged()
         {
             _checklistItems = await DatabaseService.GetChecklistItemsAsync();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
 
         private bool IsItemValid(ChecklistItem item)
