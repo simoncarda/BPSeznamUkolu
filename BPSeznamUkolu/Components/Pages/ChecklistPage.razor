@@ -36,10 +36,14 @@
             </thead>
             <tbody>
                 @foreach (var item in _checklistItems) {
-                    <tr class="@(item.IsChecked ? "opacity-75" : "")">
+                    <tr class="
+                            @((item.IsChecked && IsItemValid(item)) ? "opacity-75" : "") 
+                            @(!IsItemValid(item) ? "table-danger" : "")">
                         <td class="text-center">
                             @* Řešení automatického uložení po kliknutí *@
-                            <input type="checkbox" class="form-check-input fs-5"
+                            <input type="checkbox" 
+                                   class="form-check-input fs-5"
+                                   disabled="@(!IsItemValid(item))"
                                    @bind="item.IsChecked"
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
@@ -55,7 +59,8 @@
                         <td>
                             <input type="text" 
                                    class="form-control border-0 bg-transparent"
-                                   maxlength="@ChecklistSettings.MaxDescriptionLength" 
+                                   maxlength="@ChecklistSettings.MaxDescriptionLength"
+                                   disabled="@(!IsItemValid(item))"
                                    @bind="item.Description"
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
