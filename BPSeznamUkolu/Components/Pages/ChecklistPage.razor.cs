@@ -9,8 +9,9 @@ namespace BPSeznamUkolu.Components.Pages
     {
         private List<ChecklistItem> _checklistItems = new();
         private ChecklistItem _newItem = new();
+        private string? _errorMessage = null;
         [Inject]
-        private IDatabaseService DbService { get; set; } = default!;
+        private IDatabaseService DbService { get; set; } = null!;
 
         protected override async Task OnInitializedAsync()
         {
@@ -19,22 +20,53 @@ namespace BPSeznamUkolu.Components.Pages
 
         private async Task LoadDataAsync()
         {
-            _checklistItems = await DbService.GetChecklistItemsAsync();
+            try {
+                _errorMessage = null;
+                _checklistItems = await DbService.GetChecklistItemsAsync();
+            }
+            catch (Exception ex) {
+                _errorMessage = ex.Message;
+            }
         }
 
         private async Task OnAddChecklistItem()
         {
-            await DbService.AddChecklistItemAsync(_newItem);
+            try {
+                await DbService.AddChecklistItemAsync(_newItem);
+                _newItem = new ChecklistItem();
+                await LoadDataAsync();
+            }
+            catch (Exception ex) {
+                _errorMessage = ex.Message;
+            }
+        }
 
-            _newItem = new ChecklistItem();
-            await LoadDataAsync();
+        private async Task OnUpdateChecklistItem(ChecklistItem item)
+        {
+            if (!IsItemValid(item))
+                return;
+
+            try {
+                await DbService.UpdateChecklistItemAsync(item);
+            }
+            catch (Exception ex) {
+                await LoadDataAsync();
+                _errorMessage = ex.Message;
+            }
+        }
+        private async Task OnDeleteChecklistItem(ChecklistItem item)
+        {
+            try {
+                await DbService.DeleteChecklistItemAsync(item);
+                await LoadDataAsync();
+            }
+            catch (Exception ex) {
+                _errorMessage = ex.Message;
+            }
         }
         private static bool IsItemValid(ChecklistItem item)
         {
-            var context = new ValidationContext(item);
-            var results = new List<ValidationResult>();
-
-            return Validator.TryValidateObject(item, context, results, true);
+            return string.IsNullOrEmpty(GetErrorMessage(item));
         }
 
         private static string GetErrorMessage(ChecklistItem item)
@@ -46,19 +78,6 @@ namespace BPSeznamUkolu.Components.Pages
                 return results.FirstOrDefault()?.ErrorMessage ?? "Chyba při validaci objektu";
             }
             return string.Empty;
-        }
-
-        private async Task OnUpdateChecklistItem(ChecklistItem item)
-        {
-            if (!IsItemValid(item))
-                return;
-
-            await DbService.UpdateChecklistItemAsync(item);
-        }
-        private async Task OnDeleteChecklistItem(ChecklistItem item)
-        {
-            await DbService.DeleteChecklistItemAsync(item);
-            await LoadDataAsync();
         }
     }
 }

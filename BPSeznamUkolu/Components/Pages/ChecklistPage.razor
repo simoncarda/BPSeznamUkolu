@@ -4,6 +4,13 @@
 <div class="container mt-4">
     <h2 class="mb-4">Checklist</h2>
 
+    @if (!string.IsNullOrEmpty(_errorMessage)) {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Chyba!</strong> @_errorMessage
+            <button type="button" class="btn-close" @onclick="() => _errorMessage = null"></button>
+        </div>
+    }
+
     @* Formulář pro zadávání nových dat *@
     <EditForm Model="@_newItem" OnValidSubmit="OnAddChecklistItem">
         <DataAnnotationsValidator />
@@ -31,10 +38,10 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="width: 50px;" class="text-center">Stav</th>
-                    <th style="width: 30%;">Název</th>
+                    <th style="width: 50px" class="text-center">Stav</th>
+                    <th style="width: 30%">Název</th>
                     <th>Popis</th>
-                    <th style="width: 140px;" class="text-center">Akce</th>
+                    <th style="width: 140px" class="text-center">Akce</th>
                 </tr>
             </thead>
             <tbody>

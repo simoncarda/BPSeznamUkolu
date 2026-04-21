@@ -1,32 +1,62 @@
 ﻿using BPSeznamUkolu.Data;
 using BPSeznamUkolu.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BPSeznamUkolu.Services
 {
-    internal class DatabaseService(AppDbContext context) : IDatabaseService
+    internal class DatabaseService(AppDbContext context, ILogger<DatabaseService> logger) : IDatabaseService
     {
         public async Task AddChecklistItemAsync(ChecklistItem item)
         {
-            context.ChecklistItems.Add(item);
-            await context.SaveChangesAsync();
+            try {
+                context.ChecklistItems.Add(item);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex) 
+            {
+                logger.LogError(ex, "Chyba při přidávání položky {Name}", item.Name);
+                throw new InvalidOperationException("Nepodařilo se uložit novou položku do databáze.", ex);
+            }
         }
 
         public async Task DeleteChecklistItemAsync(ChecklistItem item)
         {
-            context.ChecklistItems.Remove(item);
-            await context.SaveChangesAsync();
+            try {
+                context.ChecklistItems.Remove(item);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Chyba při mazání položky s ID {Id}", item.Id);
+                throw new InvalidOperationException("Nepodařilo se odstranit položku z databáze.", ex);
+            }
         }
 
         public async Task UpdateChecklistItemAsync(ChecklistItem item)
         {
-            context.ChecklistItems.Update(item);
-            await context.SaveChangesAsync();
+            try 
+            {
+                context.ChecklistItems.Update(item);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                await context.Entry(item).ReloadAsync();
+                logger.LogError(ex, "Chyba při aktualizaci položky {Id}", item.Id);
+                throw new InvalidOperationException("Nepodařilo se aktualizovat data v databázi.", ex);
+            }
         }
 
         public async Task<List<ChecklistItem>> GetChecklistItemsAsync()
         {
-            return await context.ChecklistItems.ToListAsync();
+            try {
+                return await context.ChecklistItems.ToListAsync();
+            }
+            catch (Exception ex) {
+                logger.LogError(ex, "Chyba při načítání seznamu položek.");
+                throw new InvalidOperationException("Nepodařilo se načíst data z databáze.", ex);
+            }
         }
     }
 }
