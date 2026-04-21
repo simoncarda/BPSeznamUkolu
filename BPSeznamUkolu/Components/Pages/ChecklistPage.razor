@@ -4,24 +4,26 @@
 <div class="container mt-4">
     <h2 class="mb-4">Checklist</h2>
 
-    @* Přidávací formulář *@
-    <div class="input-group mb-4 shadow-sm">
-        <input type="text" 
-               class="form-control w-25 @(IsItemValid(_newItem) ? "" : "is-invalid")"
-               title="@(!IsItemValid(_newItem) ? $"{_errorMessage}" : "")"
-               maxlength="@ChecklistSettings.MaxItemNameLength" 
-               placeholder="Název položky (povinné)" 
-               @bind="_newItem.Name" />
-        <input type="text" 
-            class="form-control w-50" 
-            maxlength="@ChecklistSettings.MaxDescriptionLength" 
-            placeholder="Popis položky" 
-            @bind="_newItem.Description" />
-        <button class="btn btn-primary px-4" 
-                @onclick="OnAddChecklistItem">
-            Přidat
-        </button>
-    </div>
+    <EditForm Model="@_newItem" OnValidSubmit="OnAddChecklistItem">
+        <DataAnnotationsValidator />
+
+        <div class="input-group mb-4 shadow-sm">
+            <div class="form-floating flex-grow-1">
+                <InputText id="nameInput" class="form-control" placeholder="Název" @bind-Value="_newItem.Name" />
+                <label for="nameInput">Název položky</label>
+            
+                <ValidationMessage For="@(() => _newItem.Name)" class="text-danger small" />
+            </div>
+
+            <div class="form-floating w-50">
+                <InputText id="descInput" class="form-control" placeholder="Popis" @bind-Value="_newItem.Description" />
+                <label for="descInput">Popis položky</label>
+                <ValidationMessage For="@(() => _newItem.Description)" class="text-danger small" />
+            </div>
+
+            <button type="submit" class="btn btn-primary px-4">Přidat</button>
+        </div>
+    </EditForm>
 
     @* Tabulka *@
     <div class="table-responsive shadow-sm">
@@ -37,27 +39,26 @@
             <tbody>
                 @foreach (var item in _checklistItems) {
                     <tr class="
-                            @((item.IsChecked && IsItemValid(item)) ? "opacity-75" : "") 
-                            @(!IsItemValid(item) ? "table-danger" : "")">
+                        @((item.IsChecked && IsItemValid(item)) ? "opacity-75" : "")
+                        @(!IsItemValid(item) ? "table-danger" : "")">
                         <td class="text-center">
-                            @* Řešení automatického uložení po kliknutí *@
-                            <input type="checkbox" 
+                            <input type="checkbox"
                                    class="form-check-input fs-5"
                                    disabled="@(!IsItemValid(item))"
                                    @bind="item.IsChecked"
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
                         <td>
-                            @* Třídy border-0 a bg-transparent udělají z inputu vizuálně obyčejný text *@
-                            <input type="text" 
+                            @* ZDE JE ZMĚNA v atributu title *@
+                            <input type="text"
                                    class="form-control border-0 bg-transparent @(IsItemValid(item) ? "" : "is-invalid")"
-                                   title="@(!IsItemValid(item) ? $"{_errorMessage}" : "")"
-                                   maxlength="@ChecklistSettings.MaxItemNameLength" 
+                                   title="@(!IsItemValid(item) ? GetErrorMessage(item) : "")"
+                                   maxlength="@ChecklistSettings.MaxItemNameLength"
                                    @bind="item.Name"
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
                         <td>
-                            <input type="text" 
+                            <input type="text"
                                    class="form-control border-0 bg-transparent"
                                    maxlength="@ChecklistSettings.MaxDescriptionLength"
                                    disabled="@(!IsItemValid(item))"
@@ -65,7 +66,7 @@
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
                         <td class="text-center">
-                            <button class="btn btn-outline-danger btn-sm ms-1" 
+                            <button class="btn btn-outline-danger btn-sm ms-1"
                                     @onclick="() => OnDeleteChecklistItem(item)">
                                 ✖
                             </button>

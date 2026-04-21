@@ -1,82 +1,38 @@
-﻿using BPSeznamUkolu.Configuration;
+﻿using BPSeznamUkolu.Data;
 using BPSeznamUkolu.Models;
-using SQLite;
+using Microsoft.EntityFrameworkCore;
 
 namespace BPSeznamUkolu.Services
 {
     internal class DatabaseService : IDatabaseService
     {
-        public event Action? OnDatabaseChanged;
-
-        private SQLiteAsyncConnection? _database;
-        private const string DbName = "Checklist.db";
-
-        // Synchronizace inicializace
-        private readonly SemaphoreSlim _initSemaphore = new(1, 1);
-        private bool _initialized;
-
-        private async Task InitAsync()
+        private readonly AppDbContext _context;
+        public DatabaseService(AppDbContext context)
         {
-            if (_initialized) {
-                return;
-            }
-
-            await _initSemaphore.WaitAsync();
-            try {
-                // Znovu zkontrolujeme, zda již není inicializace provedena, protože
-                // mezi čekáním na zámek a získáním zámku mohlo jiné vlákno inicializaci dokončit.
-                if (_initialized) {
-                    return;
-                }
-
-                string dbPath = Path.Combine(FileSystem.AppDataDirectory, DbName);
-                _database = new SQLiteAsyncConnection(dbPath);
-                await _database.CreateTableAsync<ChecklistItem>();
-
-                OnDatabaseChanged?.Invoke();
-
-                _initialized = true;
-            }
-            finally {
-                _initSemaphore.Release();
-            }
+            _context = context;
         }
 
         public async Task AddChecklistItemAsync(ChecklistItem item)
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(item.Name, nameof(item));
-            if (item.Name.Length > ChecklistSettings.MaxItemNameLength)
-                throw new ArgumentException($"Název položky nesmí být delší než {ChecklistSettings.MaxItemNameLength} znaků.", nameof(item));
-            if (item.Description.Length > ChecklistSettings.MaxDescriptionLength)
-                throw new ArgumentException($"Popis položky nesmí být delší než {ChecklistSettings.MaxDescriptionLength} znaků.", nameof(item));
-            await InitAsync();
-            await _database!.InsertAsync(item);
-            OnDatabaseChanged?.Invoke();
+            _context.ChecklistItems.Add(item);
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteChecklistItemAsync(ChecklistItem item)
         {
-            await InitAsync();
-            await _database!.DeleteAsync(item);
-            OnDatabaseChanged?.Invoke();
+            _context.ChecklistItems.Remove(item);
+            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateChecklistItemAsync(ChecklistItem item)
         {
-            ArgumentNullException.ThrowIfNullOrWhiteSpace(item.Name, nameof(item));
-            if (item.Name.Length > ChecklistSettings.MaxItemNameLength)
-                throw new ArgumentException($"Název položky nesmí být delší než {ChecklistSettings.MaxItemNameLength} znaků.", nameof(item));
-            if (item.Description.Length > ChecklistSettings.MaxDescriptionLength)
-                throw new ArgumentException($"Popis položky nesmí být delší než {ChecklistSettings.MaxDescriptionLength} znaků.", nameof(item));
-            await InitAsync();
-            await _database!.UpdateAsync(item);
-            OnDatabaseChanged?.Invoke();
+            _context.ChecklistItems.Update(item);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<ChecklistItem>> GetChecklistItemsAsync()
         {
-            await InitAsync();
-            return await _database!.Table<ChecklistItem>().ToListAsync();
+            return await _context.ChecklistItems.ToListAsync();
         }
     }
 }

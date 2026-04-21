@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using BPSeznamUkolu.Data;
 using BPSeznamUkolu.Services;
+using Microsoft.Extensions.Logging;
 
 namespace BPSeznamUkolu
 {
@@ -20,6 +21,7 @@ namespace BPSeznamUkolu
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
             return builder.Build();
