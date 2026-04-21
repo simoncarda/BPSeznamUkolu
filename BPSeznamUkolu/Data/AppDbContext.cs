@@ -9,6 +9,7 @@ namespace BPSeznamUkolu.Data
         public DbSet<ChecklistItem> ChecklistItems { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
+            Database.Migrate();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

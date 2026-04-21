@@ -4,6 +4,7 @@
 <div class="container mt-4">
     <h2 class="mb-4">Checklist</h2>
 
+    @* Formulář pro zadávání nových dat *@
     <EditForm Model="@_newItem" OnValidSubmit="OnAddChecklistItem">
         <DataAnnotationsValidator />
 
@@ -49,7 +50,6 @@
                                    @bind:after="() => OnUpdateChecklistItem(item)" />
                         </td>
                         <td>
-                            @* ZDE JE ZMĚNA v atributu title *@
                             <input type="text"
                                    class="form-control border-0 bg-transparent @(IsItemValid(item) ? "" : "is-invalid")"
                                    title="@(!IsItemValid(item) ? GetErrorMessage(item) : "")"

@@ -10,7 +10,7 @@ namespace BPSeznamUkolu.Components.Pages
         private List<ChecklistItem> _checklistItems = new();
         private ChecklistItem _newItem = new();
         [Inject]
-        private IDatabaseService _dbService { get; set; } = default!;
+        private IDatabaseService DbService { get; set; } = default!;
 
         protected override async Task OnInitializedAsync()
         {
@@ -19,17 +19,17 @@ namespace BPSeznamUkolu.Components.Pages
 
         private async Task LoadDataAsync()
         {
-            _checklistItems = await _dbService.GetChecklistItemsAsync();
+            _checklistItems = await DbService.GetChecklistItemsAsync();
         }
 
         private async Task OnAddChecklistItem()
         {
-            await _dbService.AddChecklistItemAsync(_newItem);
+            await DbService.AddChecklistItemAsync(_newItem);
 
             _newItem = new ChecklistItem();
             await LoadDataAsync();
         }
-        private bool IsItemValid(ChecklistItem item)
+        private static bool IsItemValid(ChecklistItem item)
         {
             var context = new ValidationContext(item);
             var results = new List<ValidationResult>();
@@ -37,13 +37,13 @@ namespace BPSeznamUkolu.Components.Pages
             return Validator.TryValidateObject(item, context, results, true);
         }
 
-        private string GetErrorMessage(ChecklistItem item)
+        private static string GetErrorMessage(ChecklistItem item)
         {
             var context = new ValidationContext(item);
             var results = new List<ValidationResult>();
 
             if (!Validator.TryValidateObject(item, context, results, true)) {
-                return results.FirstOrDefault()?.ErrorMessage ?? "Chyba";
+                return results.FirstOrDefault()?.ErrorMessage ?? "Chyba při validaci objektu";
             }
             return string.Empty;
         }
@@ -53,11 +53,11 @@ namespace BPSeznamUkolu.Components.Pages
             if (!IsItemValid(item))
                 return;
 
-            await _dbService.UpdateChecklistItemAsync(item);
+            await DbService.UpdateChecklistItemAsync(item);
         }
         private async Task OnDeleteChecklistItem(ChecklistItem item)
         {
-            await _dbService.DeleteChecklistItemAsync(item);
+            await DbService.DeleteChecklistItemAsync(item);
             await LoadDataAsync();
         }
     }
