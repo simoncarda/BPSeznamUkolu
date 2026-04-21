@@ -12,8 +12,6 @@ namespace BPSeznamUkolu.Models
         private string _description = string.Empty;
         public bool IsChecked { get; set; } = false;
 
-        // Tímto způsobem zajišťujeme, že ItemName a Description nikdy nebudou null
-        // a zároveň budou dodržovat maximální délku definovanou v ChecklistSettings.
         [MaxLength(ChecklistSettings.MaxItemNameLength), NotNull]
         public string Name { 
             get { return _name; } 
