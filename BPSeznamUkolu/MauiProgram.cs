@@ -22,18 +22,24 @@ namespace BPSeznamUkolu
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
-            builder.Services.AddDbContext<AppDbContext>();
+            var dbPath = Path.Combine(FileSystem.AppDataDirectory, "checklist.db");
+            var connectionString = $"Data Source={dbPath}";
+
+            builder.Services.AddDbContextFactory<AppDbContext>(options => options.UseSqlite(connectionString));
             builder.Services.AddScoped<IDatabaseService, DatabaseService>();
 
             var app = builder.Build();
-            using (var scope = app.Services.CreateScope()) {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                try {
-                    dbContext.Database.Migrate();
-                }
-                catch (Exception ex) {
-                    Console.WriteLine($"Chyba při migraci databáze: {ex.Message}");
-                }
+            using var scope = app.Services.CreateScope();
+            var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(MauiProgram));
+            var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+
+            try {
+                using var dbContext = dbContextFactory.CreateDbContext();
+                dbContext.Database.Migrate();
+            }
+            catch (Exception ex) 
+            {
+                logger.LogError(ex, "An error occurred while migrating the database.");
             }
 
             return app;

@@ -5,10 +5,11 @@ using Microsoft.Extensions.Logging;
 
 namespace BPSeznamUkolu.Services
 {
-    internal class DatabaseService(AppDbContext context, ILogger<DatabaseService> logger) : IDatabaseService
+    internal class DatabaseService(IDbContextFactory<AppDbContext> dbContextFactory, ILogger<DatabaseService> logger) : IDatabaseService
     {
         public async Task AddChecklistItemAsync(ChecklistItem item)
         {
+            await using var context = await dbContextFactory.CreateDbContextAsync();
             try {
                 context.ChecklistItems.Add(item);
                 await context.SaveChangesAsync();
@@ -22,6 +23,8 @@ namespace BPSeznamUkolu.Services
 
         public async Task DeleteChecklistItemAsync(ChecklistItem item)
         {
+            await using var context = await dbContextFactory.CreateDbContextAsync();
+
             try {
                 context.ChecklistItems.Remove(item);
                 await context.SaveChangesAsync();
@@ -35,8 +38,9 @@ namespace BPSeznamUkolu.Services
 
         public async Task UpdateChecklistItemAsync(ChecklistItem item)
         {
-            try 
-            {
+            await using var context = await dbContextFactory.CreateDbContextAsync();
+
+            try {
                 context.ChecklistItems.Update(item);
                 await context.SaveChangesAsync();
             }
@@ -50,8 +54,13 @@ namespace BPSeznamUkolu.Services
 
         public async Task<List<ChecklistItem>> GetChecklistItemsAsync()
         {
+            await using var context = await dbContextFactory.CreateDbContextAsync();
+
             try {
-                return await context.ChecklistItems.ToListAsync();
+                return await context.ChecklistItems
+                    .AsNoTracking()
+                    .OrderBy(i => i.Id)
+                    .ToListAsync();
             }
             catch (Exception ex) {
                 logger.LogError(ex, "Chyba při načítání seznamu položek.");
