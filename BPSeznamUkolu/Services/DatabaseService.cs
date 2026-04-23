@@ -16,7 +16,7 @@ namespace BPSeznamUkolu.Services
             }
             catch (Exception ex) 
             {
-                logger.LogError(ex, "Chyba při přidávání položky {Name}", item.Name);
+                logger.LogError(ex, "Chyba při přidávání položky {Id}", item.Id);
                 throw new InvalidOperationException("Nepodařilo se uložit novou položku do databáze.", ex);
             }
         }
