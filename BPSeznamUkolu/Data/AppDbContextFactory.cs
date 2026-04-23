@@ -7,9 +7,9 @@ namespace BPSeznamUkolu.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            // Vytvoření DbContext pro design-time operace, jako jsou migrace
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlite("Data Source=design_time.db");
-
             return new AppDbContext(optionsBuilder.Options);
         }
     }
